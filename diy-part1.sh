@@ -9,6 +9,15 @@
 # 取消注释一个源
 # sed -i 's/^#\(.*helloworld\)/\1/' feeds.conf.default
 
+# 锁定 packages feed 到 libffi 移除之前的提交（修复 glib2 编译失败）
+# 背景： immortalwrt/packages 于 2026-10-19 (70ac3a84406c "libffi: move to core repo")
+#        把 libffi 从 feed 移入官方主仓库，而本仓库锁定的 lkiuyu 源码树（2026-05）
+#        并没有 package/libs/libffi，拉最新 feed 会导致 glib2 2.88.1 报错：
+#        "Package glib2-gobject is missing dependencies for the following libraries: libffi.so.8"
+# 方案： feed 锁定到 70ac3a84406c 的父提交 3b7cdf03（glib2 2.88.1 与 libffi 并存、可正常编译）
+sed -i 's|^src-git packages https://github.com/immortalwrt/packages.git$|src-git packages https://github.com/immortalwrt/packages.git^3b7cdf03a6f22e91ae485e1ffdda1062da7a3431|' feeds.conf.default
+grep -n '^src-git packages' feeds.conf.default
+
 # 添加第三方 feed 源（small-package 包含 openclash/passwall/ssr-plus 等常用插件）
 echo 'src-git smpackage https://github.com/kenzok8/small-package' >> feeds.conf.default
 # 添加第三方源，iStore 应用商店，编译时包名输入 luci-app-store
